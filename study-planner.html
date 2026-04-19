@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyFlow – Your Study Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --card: #151829;
+    --card2: #1c2035;
+    --accent: #7c6ff7;
+    --accent2: #f7706f;
+    --accent3: #4ecdc4;
+    --accent4: #ffd166;
+    --text: #e8eaf6;
+    --muted: #6b7280;
+    --border: #2a2f4a;
+    --success: #4ade80;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1f3a 0%, #0d0f1a 100%);
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* Nav Tabs */
+  .nav {
+    display: flex; gap: 6px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 73px; z-index: 99;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); padding: 8px 16px; border-radius: 50px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  }
+  .nav-btn.active {
+    background: var(--accent); color: white; border-color: var(--accent);
+  }
+
+  /* Pages */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 50px;
+    background: var(--accent); color: white; font-weight: 600;
+  }
+
+  /* Daily Goal */
+  .goal-display {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .goal-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(var(--accent) 0deg, var(--card2) 0deg);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+  }
+  .goal-circle::before {
+    content: ''; position: absolute;
+    width: 50px; height: 50px; border-radius: 50%;
+    background: var(--card);
+  }
+  .goal-circle span {
+    position: relative; z-index: 1;
+    font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif;
+  }
+  .goal-info h3 { font-size: 20px; font-weight: 700; font-family: 'Syne', sans-serif; }
+  .goal-info p { font-size: 12px; color: var(--muted); }
+
+  /* Progress Bar */
+  .progress-bar {
+    background: var(--card2); border-radius: 50px; height: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 50px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 0.5s ease;
+  }
+
+  /* Input styles */
+  input, select, textarea {
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 10px; padding: 10px 14px;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    width: 100%; outline: none; transition: border 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+  label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
+  .form-group { margin-bottom: 10px; }
+
+  /* Buttons */
+  .btn {
+    padding: 11px 20px; border-radius: 10px; border: none;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: white; width: 100%; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-danger { background: transparent; border: 1px solid var(--accent2); color: var(--accent2); padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+  /* Subject chips */
+  .subject-chip {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+  }
+  .subject-dot {
+    width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; flex-shrink: 0;
+  }
+  .subject-name { font-weight: 500; font-size: 14px; flex: 1; }
+  .subject-hours { font-size: 12px; color: var(--muted); margin-right: 10px; }
+
+  /* Session cards */
+  .session-card {
+    background: var(--card2); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 12px; margin-bottom: 8px;
+  }
+  .session-subject { font-weight: 600; font-size: 14px; }
+  .session-time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .session-duration {
+    font-size: 11px; background: var(--card);
+    padding: 2px 8px; border-radius: 50px; display: inline-block; margin-top: 6px;
+  }
+
+  /* Checklist */
+  .topic-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px; background: var(--card2); border-radius: 10px;
+    margin-bottom: 6px; transition: opacity 0.2s;
+  }
+  .topic-item.done { opacity: 0.5; }
+  .topic-item.done .topic-text { text-decoration: line-through; }
+  .checkbox {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid var(--border); flex-shrink: 0;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; background: transparent;
+  }
+  .checkbox.checked { background: var(--success); border-color: var(--success); }
+  .topic-text { flex: 1; font-size: 14px; }
+  .topic-subject-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 50px;
+    color: white; font-weight: 600;
+  }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-card {
+    background: var(--card2); border-radius: 12px; padding: 14px; text-align: center;
+  }
+  .stat-num { font-size: 26px; font-weight: 800; font-family: 'Syne', sans-serif; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Today's schedule */
+  .today-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .today-date { font-size: 12px; color: var(--muted); }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 30px 16px; color: var(--muted); font-size: 14px; }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+  /* Color options */
+  .color-options { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-opt {
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    border: 3px solid transparent; transition: border 0.2s;
+  }
+  .color-opt.selected { border-color: white; }
+
+  /* Separator */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  /* Animate in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .page.active .card { animation: fadeUp 0.3s ease forwards; }
+
+  /* Session left border colors */
+  .session-card[data-color] { border-left-color: attr(data-color); }
+
+  select option { background: var(--card2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 StudyFlow</h1>
+  <p id="headerDate">Loading...</p>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button class="nav-btn" onclick="showPage('subjects')">📖 Subjects</button>
+  <button class="nav-btn" onclick="showPage('sessions')">🗓 Sessions</button>
+  <button class="nav-btn" onclick="showPage('topics')">✅ Topics</button>
+  <button class="nav-btn" onclick="showPage('progress')">📊 Progress</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+
+  <!-- Daily Goal -->
+  <div class="card">
+    <div class="card-title">⚡ Daily Study Goal</div>
+    <div class="goal-display">
+      <div class="goal-circle" id="goalCircle">
+        <span id="goalPct">0%</span>
+      </div>
+      <div class="goal-info">
+        <h3 id="goalStudied">0h 0m</h3>
+        <p>of <span id="goalTarget">0</span>h goal today</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px;" id="goalMsg">Set your goal below 👇</p>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="goalBar" style="width:0%"></div></div>
+    <hr class="sep">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="number" id="goalInput" placeholder="Daily goal (hours)" min="0.5" max="16" step="0.5" style="flex:1">
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="saveGoal()">Set</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+      <input type="number" id="studiedInput" placeholder="Hours studied today" min="0" step="0.25" style="flex:1">
+      <button class="btn btn-primary btn-sm" style="width:auto;background:var(--accent3)" onclick="logStudied()">Log</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="statSubjects" style="color:var(--accent)">0</div>
+      <div class="stat-label">Subjects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statSessions" style="color:var(--accent3)">0</div>
+      <div class="stat-label">Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTopicsDone" style="color:var(--success)">0</div>
+      <div class="stat-label">Topics Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTopicsLeft" style="color:var(--accent2)">0</div>
+      <div class="stat-label">Topics Left</div>
+    </div>
+  </div>
+
+  <!-- Today's Schedule -->
+  <div class="card">
+    <div class="today-header">
+      <div class="card-title" style="margin-bottom:0">📅 Today's Sessions</div>
+      <div class="today-date" id="todayDateLabel"></div>
+    </div>
+    <div id="todaySessionsList"><div class="empty"><div class="empty-icon">🗓</div>No sessions today</div></div>
+  </div>
+
+  <!-- Upcoming Topics -->
+  <div class="card">
+    <div class="card-title">📌 Pending Topics</div>
+    <div id="pendingTopicsList"><div class="empty"><div class="empty-icon">✨</div>All caught up!</div></div>
+  </div>
+</div>
+
+<!-- SUBJECTS -->
+<div class="page" id="page-subjects">
+  <div class="card">
+    <div class="card-title">➕ Add Subject</div>
+    <div class="form-group">
+      <label>Subject Name</label>
+      <input type="text" id="subjectName" placeholder="e.g. Mathematics">
+    </div>
+    <div class="form-group">
+      <label>Color</label>
+      <div class="color-options" id="colorOptions">
+        <div class="color-opt selected" style="background:#7c6ff7" data-color="#7c6ff7" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#f7706f" data-color="#f7706f" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#4ecdc4" data-color="#4ecdc4" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#ffd166" data-color="#ffd166" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#06d6a0" data-color="#06d6a0" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#ef476f" data-color="#ef476f" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#118ab2" data-color="#118ab2" onclick="selectColor(this)"></div>
+        <div class="color-opt" style="background:#ff9f1c" data-color="#ff9f1c" onclick="selectColor(this)"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Target Hours (total)</label>
+      <input type="number" id="subjectHours" placeholder="e.g. 20" min="1">
+    </div>
+    <button class="btn btn-primary" onclick="addSubject()">Add Subject</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📚 My Subjects <span class="badge" id="subjectCount">0</span></div>
+    <div id="subjectList"><div class="empty"><div class="empty-icon">📖</div>No subjects yet</div></div>
+  </div>
+</div>
+
+<!-- SESSIONS -->
+<div class="page" id="page-sessions">
+  <div class="card">
+    <div class="card-title">➕ Schedule Session</div>
+    <div class="form-group">
+      <label>Subject</label>
+      <select id="sessionSubject">
+        <option value="">Select subject...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="sessionDate">
+    </div>
+    <div class="form-group">
+      <label>Time</label>
+      <input type="time" id="sessionTime">
+    </div>
+    <div class="form-group">
+      <label>Duration (minutes)</label>
+      <input type="number" id="sessionDuration" placeholder="e.g. 60" min="15" step="15">
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <input type="text" id="sessionNotes" placeholder="What will you study?">
+    </div>
+    <button class="btn btn-primary" onclick="addSession()">Schedule Session</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗓 All Sessions <span class="badge" id="sessionCount">0</span></div>
+    <div id="sessionList"><div class="empty"><div class="empty-icon">🗓</div>No sessions scheduled</div></div>
+  </div>
+</div>
+
+<!-- TOPICS CHECKLIST -->
+<div class="page" id="page-topics">
+  <div class="card">
+    <div class="card-title">➕ Add Topic</div>
+    <div class="form-group">
+      <label>Topic Name</label>
+      <input type="text" id="topicName" placeholder="e.g. Chapter 3: Algebra">
+    </div>
+    <div class="form-group">
+      <label>Subject</label>
+      <select id="topicSubject">
+        <option value="">Select subject...</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="addTopic()">Add Topic</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✅ Topics Checklist</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-outline" onclick="filterTopics('all')">All</button>
+      <button class="btn btn-sm btn-outline" onclick="filterTopics('pending')">Pending</button>
+      <button class="btn btn-sm btn-outline" onclick="filterTopics('done')">Done</button>
+    </div>
+    <div id="topicList"><div class="empty"><div class="empty-icon">📝</div>No topics yet</div></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+  <div class="card">
+    <div class="card-title">📊 Overall Progress</div>
+    <div class="stats-row" style="margin-bottom:0">
+      <div class="stat-card">
+        <div class="stat-num" id="progTotal" style="color:var(--accent)">0</div>
+        <div class="stat-label">Total Topics</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="progDone" style="color:var(--success)">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
+        <span>Overall Completion</span><span id="progPct">0%</span>
+      </div>
+      <div class="progress-bar" style="height:12px">
+        <div class="progress-fill" id="progBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="subjectProgressList"></div>
+</div>
+
+<script>
+// ===== DATA =====
+let data = JSON.parse(localStorage.getItem('studyflow') || '{}');
+if (!data.subjects) data.subjects = [];
+if (!data.sessions) data.sessions = [];
+if (!data.topics) data.topics = [];
+if (!data.goal) data.goal = 0;
+if (!data.studied) data.studied = {};
+let selectedColor = '#7c6ff7';
+let topicFilter = 'all';
+
+function save() { localStorage.setItem('studyflow', JSON.stringify(data)); }
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  renderAll();
+}
+
+// ===== DATE =====
+function today() { return new Date().toISOString().split('T')[0]; }
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+}
+function formatTime(t) {
+  const [h, m] = t.split(':');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${m} ${ampm}`;
+}
+
+// ===== SUBJECTS =====
+function selectColor(el) {
+  document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColor = el.dataset.color;
+}
+
+function addSubject() {
+  const name = document.getElementById('subjectName').value.trim();
+  const hours = parseFloat(document.getElementById('subjectHours').value) || 10;
+  if (!name) { alert('Enter subject name!'); return; }
+  data.subjects.push({ id: Date.now(), name, color: selectedColor, targetHours: hours });
+  save();
+  document.getElementById('subjectName').value = '';
+  document.getElementById('subjectHours').value = '';
+  renderAll();
+}
+
+function deleteSubject(id) {
+  if (!confirm('Delete this subject and its sessions/topics?')) return;
+  data.subjects = data.subjects.filter(s => s.id !== id);
+  data.sessions = data.sessions.filter(s => s.subjectId !== id);
+  data.topics = data.topics.filter(t => t.subjectId !== id);
+  save(); renderAll();
+}
+
+function renderSubjects() {
+  const list = document.getElementById('subjectList');
+  const count = document.getElementById('subjectCount');
+  if (!count) return;
+  count.textContent = data.subjects.length;
+  if (!data.subjects.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📖</div>No subjects yet</div>'; return; }
+  list.innerHTML = data.subjects.map(s => `
+    <div class="subject-chip">
+      <div class="subject-dot" style="background:${s.color}"></div>
+      <div class="subject-name">${s.name}</div>
+      <div class="subject-hours">${s.targetHours}h goal</div>
+      <button class="btn btn-danger" onclick="deleteSubject(${s.id})">✕</button>
+    </div>
+  `).join('');
+
+  // Populate selects
+  const opts = '<option value="">Select subject...</option>' + data.subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  ['sessionSubject','topicSubject'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = opts; });
+}
+
+// ===== SESSIONS =====
+function addSession() {
+  const subjectId = parseInt(document.getElementById('sessionSubject').value);
+  const date = document.getElementById('sessionDate').value;
+  const time = document.getElementById('sessionTime').value;
+  const duration = parseInt(document.getElementById('sessionDuration').value);
+  const notes = document.getElementById('sessionNotes').value.trim();
+  if (!subjectId || !date || !time || !duration) { alert('Fill all required fields!'); return; }
+  data.sessions.push({ id: Date.now(), subjectId, date, time, duration, notes });
+  save();
+  document.getElementById('sessionDate').value = '';
+  document.getElementById('sessionTime').value = '';
+  document.getElementById('sessionDuration').value = '';
+  document.getElementById('sessionNotes').value = '';
+  renderAll();
+}
+
+function deleteSession(id) {
+  data.sessions = data.sessions.filter(s => s.id !== id);
+  save(); renderAll();
+}
+
+function getSubject(id) { return data.subjects.find(s => s.id === id) || {name:'Unknown',color:'#888'}; }
+
+function renderSessions() {
+  const list = document.getElementById('sessionList');
+  const count = document.getElementById('sessionCount');
+  if (!count) return;
+  count.textContent = data.sessions.length;
+  if (!data.sessions.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">🗓</div>No sessions scheduled</div>'; return; }
+  const sorted = [...data.sessions].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  list.innerHTML = sorted.map(s => {
+    const sub = getSubject(s.subjectId);
+    return `<div class="session-card" style="border-left-color:${sub.color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="session-subject">${sub.name}</div>
+          <div class="session-time">📅 ${formatDate(s.date)} at ${formatTime(s.time)}</div>
+          ${s.notes ? `<div class="session-time">📝 ${s.notes}</div>` : ''}
+          <div class="session-duration">⏱ ${s.duration} min</div>
+        </div>
+        <button class="btn btn-danger" onclick="deleteSession(${s.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== TOPICS =====
+function addTopic() {
+  const name = document.getElementById('topicName').value.trim();
+  const subjectId = parseInt(document.getElementById('topicSubject').value);
+  if (!name || !subjectId) { alert('Fill all fields!'); return; }
+  data.topics.push({ id: Date.now(), name, subjectId, done: false });
+  save();
+  document.getElementById('topicName').value = '';
+  renderAll();
+}
+
+function toggleTopic(id) {
+  const t = data.topics.find(t => t.id === id);
+  if (t) { t.done = !t.done; save(); renderAll(); }
+}
+
+function deleteTopic(id) {
+  data.topics = data.topics.filter(t => t.id !== id);
+  save(); renderAll();
+}
+
+function filterTopics(f) { topicFilter = f; renderTopics(); }
+
+function renderTopics() {
+  const list = document.getElementById('topicList');
+  if (!list) return;
+  let topics = [...data.topics];
+  if (topicFilter === 'pending') topics = topics.filter(t => !t.done);
+  if (topicFilter === 'done') topics = topics.filter(t => t.done);
+  if (!topics.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">✨</div>No topics here!</div>'; return; }
+  list.innerHTML = topics.map(t => {
+    const sub = getSubject(t.subjectId);
+    return `<div class="topic-item ${t.done ? 'done' : ''}">
+      <div class="checkbox ${t.done ? 'checked' : ''}" onclick="toggleTopic(${t.id})">${t.done ? '✓' : ''}</div>
+      <div class="topic-text">${t.name}</div>
+      <span class="topic-subject-tag" style="background:${sub.color}">${sub.name}</span>
+      <button class="btn btn-danger" style="margin-left:6px" onclick="deleteTopic(${t.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ===== GOAL =====
+function saveGoal() {
+  const g = parseFloat(document.getElementById('goalInput').value);
+  if (!g || g <= 0) { alert('Enter valid goal hours!'); return; }
+  data.goal = g;
+  save(); renderDashboard();
+}
+
+function logStudied() {
+  const h = parseFloat(document.getElementById('studiedInput').value);
+  if (!h || h < 0) { alert('Enter valid hours!'); return; }
+  data.studied[today()] = (data.studied[today()] || 0) + h;
+  save(); renderDashboard();
+  document.getElementById('studiedInput').value = '';
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const now = new Date();
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('en-IN', {weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('todayDateLabel').textContent = formatDate(today());
+
+  // Goal
+  const goal = data.goal || 0;
+  const studied = data.studied[today()] || 0;
+  const pct = goal > 0 ? Math.min(100, Math.round((studied / goal) * 100)) : 0;
+  const deg = pct * 3.6;
+  document.getElementById('goalCircle').style.background = `conic-gradient(var(--accent) ${deg}deg, var(--card2) ${deg}deg)`;
+  document.getElementById('goalPct').textContent = pct + '%';
+  document.getElementById('goalStudied').textContent = `${Math.floor(studied)}h ${Math.round((studied%1)*60)}m`;
+  document.getElementById('goalTarget').textContent = goal;
+  document.getElementById('goalBar').style.width = pct + '%';
+  document.getElementById('goalMsg').textContent = pct >= 100 ? '🎉 Goal achieved!' : pct > 50 ? '💪 Keep going!' : goal > 0 ? '📖 Start studying!' : 'Set your goal above 👆';
+
+  // Stats
+  document.getElementById('statSubjects').textContent = data.subjects.length;
+  document.getElementById('statSessions').textContent = data.sessions.length;
+  document.getElementById('statTopicsDone').textContent = data.topics.filter(t => t.done).length;
+  document.getElementById('statTopicsLeft').textContent = data.topics.filter(t => !t.done).length;
+
+  // Today sessions
+  const todaySess = data.sessions.filter(s => s.date === today()).sort((a,b) => a.time.localeCompare(b.time));
+  const tsl = document.getElementById('todaySessionsList');
+  if (!todaySess.length) { tsl.innerHTML = '<div class="empty"><div class="empty-icon">🗓</div>No sessions today</div>'; }
+  else {
+    tsl.innerHTML = todaySess.map(s => {
+      const sub = getSubject(s.subjectId);
+      return `<div class="session-card" style="border-left-color:${sub.color}">
+        <div class="session-subject">${sub.name}</div>
+        <div class="session-time">🕐 ${formatTime(s.time)} · ⏱ ${s.duration} min</div>
+        ${s.notes ? `<div class="session-time">📝 ${s.notes}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Pending topics (first 5)
+  const pending = data.topics.filter(t => !t.done).slice(0, 5);
+  const ptl = document.getElementById('pendingTopicsList');
+  if (!pending.length) { ptl.innerHTML = '<div class="empty"><div class="empty-icon">✨</div>All caught up!</div>'; }
+  else {
+    ptl.innerHTML = pending.map(t => {
+      const sub = getSubject(t.subjectId);
+      return `<div class="topic-item">
+        <div class="checkbox" onclick="toggleTopic(${t.id})"></div>
+        <div class="topic-text">${t.name}</div>
+        <span class="topic-subject-tag" style="background:${sub.color}">${sub.name}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ===== PROGRESS =====
+function renderProgress() {
+  const total = data.topics.length;
+  const done = data.topics.filter(t => t.done).length;
+  const pct = total > 0 ? Math.round((done/total)*100) : 0;
+  const pd = document.getElementById('progTotal'); if(pd) pd.textContent = total;
+  const pp = document.getElementById('progDone'); if(pp) pp.textContent = done;
+  const pb = document.getElementById('progBar'); if(pb) pb.style.width = pct + '%';
+  const pp2 = document.getElementById('progPct'); if(pp2) pp2.textContent = pct + '%';
+
+  const spl = document.getElementById('subjectProgressList');
+  if (!spl) return;
+  if (!data.subjects.length) { spl.innerHTML = ''; return; }
+
+  spl.innerHTML = data.subjects.map(sub => {
+    const subTopics = data.topics.filter(t => t.subjectId === sub.id);
+    const subDone = subTopics.filter(t => t.done).length;
+    const subPct = subTopics.length > 0 ? Math.round((subDone/subTopics.length)*100) : 0;
+    const subSessions = data.sessions.filter(s => s.subjectId === sub.id);
+    return `<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${sub.color};flex-shrink:0"></div>
+        <div style="font-weight:600;font-size:15px;flex:1">${sub.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${subTopics.length} topics · ${subSessions.length} sessions</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span>${subDone}/${subTopics.length} topics done</span>
+        <span style="color:${sub.color};font-weight:600">${subPct}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${subPct}%;background:linear-gradient(90deg,${sub.color},${sub.color}99)"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  renderDashboard();
+  renderSubjects();
+  renderSessions();
+  renderTopics();
+  renderProgress();
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today's date as default for session
+  const sd = document.getElementById('sessionDate');
+  if (sd) sd.value = today();
+  renderAll();
+});
+</script>
+</body>
+</html>
